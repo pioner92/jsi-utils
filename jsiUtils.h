@@ -34,12 +34,20 @@ inline jsi::String jsiConvert<jsi::String, std::string>(
   return jsi::String::createFromUtf8(rt, arg);
 }
 
+#if defined(__APPLE__)
+template <>
+inline NSString* jsiConvert<NSString*, std::string>(jsi::Runtime& rt,
+                                                    const std::string& arg) {
+  return [NSString stringWithUTF8String:arg.c_str()];
+}
+#endif
+
 inline jsi::Value createPromise(
     jsi::Runtime& rt,
     std::function<void(jsi::Runtime& rt,
                        jsi::Function resolve,
                        jsi::Function reject)> executor) {
-  return jsi::Function::createFromHostFunction(
+  auto promiseCallbac = jsi::Function::createFromHostFunction(
       rt, jsi::PropNameID::forAscii(rt, "promise"), 2,
       [executor = std::move(executor)](jsi::Runtime& rt,
                                        const jsi::Value& thisVal,
@@ -48,6 +56,10 @@ inline jsi::Value createPromise(
                  args[1].getObject(rt).getFunction(rt));
         return jsi::Value::undefined();
       });
+
+  return rt.global()
+      .getPropertyAsFunction(rt, "Promise")
+      .callAsConstructor(rt, std::move(promiseCallbac), 1);
 }
 
 inline jsi::Function createFunction(

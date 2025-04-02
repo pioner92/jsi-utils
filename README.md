@@ -1,6 +1,6 @@
 # jsi-utils
 helpers for JSI code
-```cpp
+```c
   jsi::String jsi_str = jsi::String::createFromUtf8(*rt, "hello");
 
   std::string cpp_str = "hello";
